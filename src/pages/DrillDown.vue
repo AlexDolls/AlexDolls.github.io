@@ -3,9 +3,12 @@
     <div class="page-content">
       <button class="back-btn" @click="goBack">← Back to Movie</button>
       
-      <div v-if="loading" class="loading">Loading {{ type }}...</div>
+      <div v-if="loading" class="loading-wrapper">
+        <LoadingSpinner :message="getLoadingMessage()" />
+      </div>
       <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else class="drill-down-content">
+      <Transition name="fade" appear>
+        <div v-if="!loading && !error" class="drill-down-content">
         <div class="drill-down-header">
           <h1>{{ capitalize(type) }}</h1>
           <span class="movie-title">{{ movieTitle }}</span>
@@ -15,11 +18,17 @@
           <div v-if="items.length === 0" class="empty">
             No {{ type }} available
           </div>
-          <div v-else class="items-grid">
+          <TransitionGroup
+            v-else
+            name="item-list"
+            tag="div"
+            class="items-grid"
+          >
             <div
               v-for="(item, index) in items"
               :key="index"
               class="item-card"
+              :style="{ animationDelay: `${index * 0.05}s` }"
             >
               <h3>{{ getItemName(item) }}</h3>
               <div class="item-details">
@@ -29,13 +38,19 @@
                   class="detail-row"
                 >
                   <span class="detail-label">{{ formatLabel(key) }}:</span>
-                  <span class="detail-value">{{ formatValue(value, key) }}</span>
+                  <span class="detail-value">
+                    <span v-if="isLoadingPlanet(value, key)" class="planet-loading">
+                      <span class="mini-spinner"></span> Loading planet...
+                    </span>
+                    <span v-else>{{ formatValue(value, key) }}</span>
+                  </span>
                 </div>
               </div>
             </div>
-          </div>
+          </TransitionGroup>
         </div>
-      </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -44,6 +59,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getMovies, fetchMultipleResources, getPlanet } from '../services/swapi'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -57,6 +73,7 @@ const planetNames = ref({}) // Map of planet URLs to planet names
 
 const movieId = parseInt(route.params.id)
 const type = route.params.type
+const loadingPlanets = ref(false)
 
 const detailFields = {
   characters: ['name', 'height', 'mass', 'hair_color', 'skin_color', 'eye_color', 'birth_year'],
@@ -104,7 +121,9 @@ async function loadItems() {
 
     // If loading species, fetch homeworld planet names
     if (type === 'species') {
+      loadingPlanets.value = true
       await loadPlanetNames()
+      loadingPlanets.value = false
     }
   } catch (err) {
     error.value = `Failed to load ${type}. Please try again.`
@@ -166,14 +185,32 @@ function formatValue(value, key) {
   
   // Handle homeworld - display planet name instead of URL
   if (key === 'homeworld' && typeof value === 'string' && value.startsWith('http')) {
-    return planetNames.value[value] || 'Loading...'
+    return planetNames.value[value] || 'Unknown Planet'
   }
   
   return value
 }
 
+function isLoadingPlanet(value, key) {
+  return key === 'homeworld' && 
+         typeof value === 'string' && 
+         value.startsWith('http') && 
+         !planetNames.value[value] &&
+         loadingPlanets.value
+}
+
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+function getLoadingMessage() {
+  const typeNames = {
+    characters: 'Characters',
+    starships: 'Starships',
+    vehicles: 'Vehicles',
+    species: 'Species'
+  }
+  return `Loading ${typeNames[type] || capitalize(type)}...`
 }
 
 function goBack() {
@@ -186,6 +223,8 @@ function goBack() {
   min-height: 100vh;
   padding: 2rem;
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  position: relative;
+  z-index: 1;
 }
 
 .page-content {
@@ -203,11 +242,38 @@ function goBack() {
   font-size: 1rem;
   margin-bottom: 2rem;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.back-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.back-btn:hover::before {
+  left: 100%;
 }
 
 .back-btn:hover {
   border-color: #ffd700;
   color: #ffd700;
+  transform: translateX(-5px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+}
+
+.loading-wrapper {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .loading,
@@ -229,6 +295,27 @@ function goBack() {
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: slideInUp 0.6s ease-out;
+}
+
+.fade-enter-active {
+  transition: all 0.5s ease-out;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .drill-down-header {
@@ -269,13 +356,69 @@ function goBack() {
   border: 1px solid #444;
   border-radius: 8px;
   padding: 1.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: fadeInScale 0.5s ease-out both;
+  position: relative;
+  overflow: hidden;
+}
+
+.item-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 215, 0, 0.1),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.item-card:hover::before {
+  left: 100%;
 }
 
 .item-card:hover {
   border-color: #ffd700;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
+}
+
+.item-list-enter-active {
+  transition: all 0.5s ease-out;
+}
+
+.item-list-leave-active {
+  transition: all 0.3s ease-in;
+}
+
+.item-list-enter-from {
+  opacity: 0;
+  transform: translateY(20px) scale(0.9);
+}
+
+.item-list-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+.item-list-move {
+  transition: transform 0.5s ease;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .item-card h3 {
@@ -309,6 +452,29 @@ function goBack() {
   text-align: right;
   flex: 1;
   margin-left: 1rem;
+}
+
+.planet-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ffd700;
+  font-style: italic;
+}
+
+.mini-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-top-color: #ffd700;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {

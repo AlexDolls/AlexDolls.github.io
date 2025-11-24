@@ -63,16 +63,42 @@ function handleClick() {
   border-radius: 12px;
   padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.movie-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 215, 0, 0.1),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.movie-card:hover::before {
+  left: 100%;
 }
 
 .movie-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-8px) scale(1.02);
   border-color: #ffd700;
-  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 12px 32px rgba(255, 215, 0, 0.4);
+}
+
+.movie-card:active {
+  transform: translateY(-4px) scale(1.01);
 }
 
 .card-header {
@@ -89,6 +115,12 @@ function handleClick() {
   margin: 0;
   flex: 1;
   line-height: 1.3;
+  transition: all 0.3s ease;
+}
+
+.movie-card:hover .movie-title {
+  color: #ffed4e;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .episode-badge {
@@ -152,12 +184,38 @@ function handleClick() {
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
   font-size: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.view-details-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.view-details-btn:hover::after {
+  width: 300px;
+  height: 300px;
 }
 
 .view-details-btn:hover {
   background-color: #ffed4e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.view-details-btn:active {
+  transform: translateY(0);
 }
 </style>
 

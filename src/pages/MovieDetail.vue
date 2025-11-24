@@ -3,9 +3,10 @@
     <div class="page-content">
       <button class="back-btn" @click="goBack">← Back to Movies</button>
       
-      <div v-if="loading" class="loading">Loading movie details...</div>
+      <LoadingSpinner v-if="loading" message="Loading movie details..." />
       <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else-if="movie" class="movie-detail">
+      <Transition name="fade" appear>
+        <div v-if="movie && !loading" class="movie-detail">
         <div class="detail-header">
           <h1>{{ movie.title }}</h1>
           <span class="episode-badge">Episode {{ movie.episode_id }}</span>
@@ -55,7 +56,8 @@
             />
           </div>
         </div>
-      </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -65,6 +67,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getMovies, getMovie } from '../services/swapi'
 import DrillDownButton from '../components/DrillDownButton.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -129,6 +132,8 @@ onMounted(() => {
   min-height: 100vh;
   padding: 2rem;
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  position: relative;
+  z-index: 1;
 }
 
 .page-content {
@@ -146,11 +151,30 @@ onMounted(() => {
   font-size: 1rem;
   margin-bottom: 2rem;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.back-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.back-btn:hover::before {
+  left: 100%;
 }
 
 .back-btn:hover {
   border-color: #ffd700;
   color: #ffd700;
+  transform: translateX(-5px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 
 .loading,
@@ -171,6 +195,27 @@ onMounted(() => {
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: slideInUp 0.6s ease-out;
+}
+
+.fade-enter-active {
+  transition: all 0.5s ease-out;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .detail-header {
@@ -234,6 +279,43 @@ onMounted(() => {
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
   border-left: 4px solid #ffd700;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.8s ease-out 0.3s both;
+}
+
+.opening-crawl-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 215, 0, 0.05) 50%,
+    transparent 100%
+  );
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    transform: translateY(-100%);
+  }
+  50% {
+    transform: translateY(100%);
+  }
 }
 
 .opening-crawl-section h2 {

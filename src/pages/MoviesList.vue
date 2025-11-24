@@ -12,17 +12,22 @@
       </div>
     </header>
 
-    <div v-if="loading" class="loading">Loading movies...</div>
+    <LoadingSpinner v-if="loading" message="Loading movies..." />
     <div v-if="error" class="error">{{ error }}</div>
 
-    <div v-if="!loading && !error" class="movies-grid">
+    <TransitionGroup
+      v-if="!loading && !error"
+      name="movie-list"
+      tag="div"
+      class="movies-grid"
+    >
       <MovieCard
         v-for="movie in filteredMovies"
         :key="movie.episode_id"
         :movie="movie"
         @show-details="showMovieDetails"
       />
-    </div>
+    </TransitionGroup>
   </div>
 </template>
 
@@ -31,6 +36,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getMovies } from '../services/swapi'
 import MovieCard from '../components/MovieCard.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const router = useRouter()
 
@@ -78,6 +84,8 @@ onMounted(() => {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .header {
@@ -90,12 +98,14 @@ onMounted(() => {
   text-align: center;
   margin-bottom: 1.5rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  animation: fadeInDown 0.8s ease-out;
 }
 
 .search-container {
   display: flex;
   justify-content: center;
   margin-bottom: 2rem;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
 }
 
 .search-input {
@@ -108,11 +118,13 @@ onMounted(() => {
   background-color: #1a1a1a;
   color: #fff;
   outline: none;
-  transition: border-color 0.3s;
+  transition: all 0.3s ease;
 }
 
 .search-input:focus {
   border-color: #ffd700;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+  transform: scale(1.02);
 }
 
 .loading,
@@ -131,6 +143,51 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
+}
+
+/* Transition animations */
+.movie-list-enter-active {
+  transition: all 0.5s ease-out;
+}
+
+.movie-list-leave-active {
+  transition: all 0.3s ease-in;
+}
+
+.movie-list-enter-from {
+  opacity: 0;
+  transform: translateY(30px) scale(0.9);
+}
+
+.movie-list-leave-to {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+}
+
+.movie-list-move {
+  transition: transform 0.5s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (max-width: 768px) {
