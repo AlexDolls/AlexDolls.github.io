@@ -23,26 +23,21 @@
         @show-details="showMovieDetails"
       />
     </div>
-
-    <MovieDetail
-      v-if="selectedMovie"
-      :movie="selectedMovie"
-      @close="closeMovieDetails"
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getMovies } from '../services/swapi'
 import MovieCard from '../components/MovieCard.vue'
-import MovieDetail from '../components/MovieDetail.vue'
+
+const router = useRouter()
 
 const movies = ref([])
 const loading = ref(true)
 const error = ref(null)
 const searchQuery = ref('')
-const selectedMovie = ref(null)
 
 const filteredMovies = computed(() => {
   if (!searchQuery.value.trim()) {
@@ -70,11 +65,7 @@ async function loadMovies() {
 }
 
 function showMovieDetails(movie) {
-  selectedMovie.value = movie
-}
-
-function closeMovieDetails() {
-  selectedMovie.value = null
+  router.push(`/movie/${movie.episode_id}`)
 }
 
 onMounted(() => {
