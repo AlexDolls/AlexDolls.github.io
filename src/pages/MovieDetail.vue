@@ -131,7 +131,7 @@ onMounted(() => {
 .movie-detail-page {
   min-height: 100vh;
   padding: 2rem;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  background: transparent;
   position: relative;
   z-index: 1;
 }

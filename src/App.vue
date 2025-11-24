@@ -46,6 +46,10 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  background-color: #0a0a0a;
+}
+
 .app-container {
   position: relative;
   min-height: 100vh;
@@ -60,6 +64,7 @@ body {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
 }
 
 .star {
