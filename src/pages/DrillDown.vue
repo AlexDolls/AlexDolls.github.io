@@ -60,7 +60,7 @@ const type = route.params.type
 const detailFields = {
   characters: ['name', 'height', 'mass', 'hair_color', 'skin_color', 'eye_color', 'birth_year'],
   starships: ['name', 'model', 'manufacturer', 'length', 'crew', 'passengers', 'starship_class'],
-  vehicles: ['name', 'model', 'manufacturer', 'length', 'crew', 'passengers', 'vehicle_class'],
+  vehicles: ['name', 'model', 'manufacturer', 'cost_in_credits', 'length', 'max_atmosphering_speed', 'crew', 'passengers', 'cargo_capacity', 'consumables', 'vehicle_class'],
   species: ['name', 'classification', 'designation', 'average_height', 'average_lifespan', 'language', 'homeworld']
 }
 
